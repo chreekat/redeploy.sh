@@ -9,7 +9,7 @@
 # Since this deploys to a remote server, /etc/nixos is unused on that server.
 
 # Must be defined in redeploy_config.sh
-declare -A target old
+declare -A target old nixos_rebuild_args
 
 # shellcheck disable=SC1091
 . redeploy_config.sh
