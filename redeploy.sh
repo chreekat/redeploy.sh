@@ -34,24 +34,27 @@ rebuild build "$@"
 
 new="$(readlink result)"
 current="$(ssh "${target["$system"]}" readlink /run/current-system)"
-current_drv=$(ssh "${target["$system"]}" nix-store --query --deriver "$current")
+# FIXME: This is broken somehow, don't use.
+#current_drv=$(ssh "${target["$system"]}" nix-store --query --deriver "$current")
 
-if [[ $current != "${old["$system"]}" ]]; then
-    >&2 echo
-    >&2 echo "*** WARNING: The last deployed system is not the same as the current running system."
-    >&2 echo "*** Last deployed system: ${old["$system"]}"
-    >&2 echo "*** Current system: $current"
-    if [ -t 0 ]; then
-        read -n1 -rep "Proceed? [y/N] " yn
-        if [[ $yn != [yY] ]]; then
-            exit 0
-        fi
-    else
-        exit 1
-    fi
-fi
-
+# If old == new, we've given permission to deploy the new system.
 if [[ ${old["$system"]} != "$new" ]]; then
+    if [[ $current != "${old["$system"]}" ]]; then
+        >&2 echo
+        >&2 echo "*** WARNING: The last deployed system is not the same as the current running system."
+        >&2 echo "*** Last deployed system: ${old["$system"]}"
+        >&2 echo "*** Current system: $current"
+        if [ -t 0 ]; then
+            read -n1 -rp "Proceed? [y/N] " yn
+            if [[ $yn != [yY] ]]; then
+                exit 0
+            fi
+            echo
+        else
+            exit 1
+        fi
+    fi
+
     if [[ "${1:-}" = '-f' ]]; then
         >&2 echo
         >&2 echo "*** Forcing a redeploy of a NEW configuration for $system."
@@ -64,9 +67,9 @@ if [[ ${old["$system"]} != "$new" ]]; then
         >&2 echo "*** This is a NEW configuration. Edit redeploy_config.sh if you're satisfied with it."
 
         if [ -t 0 ]; then
-            read -rp "Show diff? [y/N] " yn
+            read -n1 -rp "Show diff? [y/N] " yn
             if [[ $yn = [yY] ]]; then
-                nix copy --substitute-on-destination --from ssh://"${target["$system"]}" "$current_drv"
+                #nix copy --from ssh://"${target["$system"]}" "$current_drv"
                 nix-diff --color always "${old["$system"]}" "$new" | less
             fi
         fi
