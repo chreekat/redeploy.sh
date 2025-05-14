@@ -1,7 +1,3 @@
-#!/usr/bin/env bash
-
-set -Eeuo pipefail
-
 # Usage:
 #        ./redeploy.sh <system>
 
@@ -12,6 +8,10 @@ set -Eeuo pipefail
 
 # Since this deploys to a remote server, /etc/nixos is unused on that server.
 
+# Must be defined in redeploy_config.sh
+declare -A target old
+
+# shellcheck disable=SC1091
 . redeploy_config.sh
 
 system="$1"
@@ -36,7 +36,7 @@ new="$(readlink result)"
 current="$(ssh "${target["$system"]}" readlink /run/current-system)"
 current_drv=$(ssh "${target["$system"]}" nix-store --query --deriver "$current")
 
-if [[ $current != $old["$system"] ]]; then
+if [[ $current != "${old["$system"]}" ]]; then
     >&2 echo
     >&2 echo "*** WARNING: The last deployed system is not the same as the current running system."
     >&2 echo "*** Last deployed system: ${old["$system"]}"
