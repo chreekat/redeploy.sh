@@ -41,9 +41,10 @@ current="$(ssh "${target["$system"]}" readlink /run/current-system)"
 if [[ ${old["$system"]} != "$new" ]]; then
     if [[ $current != "${old["$system"]}" ]]; then
         >&2 echo
-        >&2 echo "*** WARNING: The last deployed system is not the same as the current running system."
-        >&2 echo "*** Last deployed system: ${old["$system"]}"
-        >&2 echo "*** Current system: $current"
+        >&2 echo "*** WARNING: Three-way discrepancy."
+        >&2 echo "*** Current config (being deployed): $new"
+        >&2 echo "*** Last deployed config:            ${old["$system"]}"
+        >&2 echo "*** Current *running* config:        $current"
         if [ -t 0 ]; then
             read -n1 -rp "Proceed? [y/N] " yn
             if [[ $yn != [yY] ]]; then
