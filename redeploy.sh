@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Usage:
 #        ./redeploy.sh [-f] <system>
 
@@ -72,12 +74,14 @@ if [[ ${old["$system"]} != "$new" ]]; then
         >&2 echo "*** Current config (being deployed): $new"
         >&2 echo "*** Last deployed config:            ${old["$system"]}"
         >&2 echo "*** Current *running* config:        $current"
-        if [ -t 0 ]; then
+        if [[ -t 0 ]] && [[ $force != "true" ]]; then
             read -n1 -rp "Proceed? [y/N] " yn
             if [[ $yn != [yY] ]]; then
                 exit 0
             fi
             echo
+        elif $force; then
+            :
         else
             exit 1
         fi
@@ -87,12 +91,17 @@ if [[ ${old["$system"]} != "$new" ]]; then
         >&2 echo
         >&2 echo "*** Forcing a redeploy of a NEW configuration for $system."
         >&2 echo
-        read -n1 -rp "Continue with forced deploy? [y/N] " yn
-        if [[ $yn = [yY] ]]; then
-            rebuild switch --target-host "${target["$system"]}"
+        # FIXME: Why do I have this check, anyway?
+        if [ -t 0 ]; then
+            read -n1 -rp "Continue with forced deploy? [y/N] " yn
+            if [[ $yn = [yY] ]]; then
+                rebuild switch --target-host "${target["$system"]}"
+                >&2 echo
+                >&2 echo "*** New result for $system: $(readlink result)"
+            fi
+        else
+            exit 1
         fi
-        >&2 echo
-        >&2 echo "*** New result for $system: $(readlink result)"
     else
         >&2 echo
         >&2 echo "*** This is a NEW configuration. Edit redeploy_config.sh if you're satisfied with it."
