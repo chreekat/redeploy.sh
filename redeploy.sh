@@ -1,5 +1,5 @@
 # Usage:
-#        ./redeploy.sh <system>
+#        ./redeploy.sh [-f] <system>
 
 # Redeploys a server. Enforces that the last-deployed state is recorded in
 # redeploy_config.sh. This might be more pain than it's worth, but the idea was
@@ -13,6 +13,33 @@ declare -A target old nixos_rebuild_args
 
 # shellcheck disable=SC1091
 . redeploy_config.sh
+
+force=false
+
+usage() {
+    >&2 echo "Usage: $0 [-f] <system> [nixos-rebuild args...]"
+    exit 1
+}
+
+while getopts ":f" opt; do
+    case "$opt" in
+        f)
+            force=true
+            ;;
+        \?)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+if [[ ${1:-} == '--' ]]; then
+    shift
+fi
+
+if [[ $# -lt 1 ]]; then
+    usage
+fi
 
 system="$1"
 shift
@@ -56,11 +83,14 @@ if [[ ${old["$system"]} != "$new" ]]; then
         fi
     fi
 
-    if [[ "${1:-}" = '-f' ]]; then
+    if "$force"; then
         >&2 echo
         >&2 echo "*** Forcing a redeploy of a NEW configuration for $system."
         >&2 echo
-        rebuild switch --target-host "${target["$system"]}"
+        read -n1 -rp "Continue with forced deploy? [y/N] " yn
+        if [[ $yn = [yY] ]]; then
+            rebuild switch --target-host "${target["$system"]}"
+        fi
         >&2 echo
         >&2 echo "*** New result for $system: $(readlink result)"
     else
@@ -70,7 +100,6 @@ if [[ ${old["$system"]} != "$new" ]]; then
         if [ -t 0 ]; then
             read -n1 -rp "Show diff? [y/N] " yn
             if [[ $yn = [yY] ]]; then
-                #nix copy --from ssh://"${target["$system"]}" "$current_drv"
                 nix-diff --color always "${old["$system"]}" "$new" | less
             fi
         fi
