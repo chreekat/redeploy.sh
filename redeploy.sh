@@ -118,8 +118,9 @@ if [[ ${old["$system"]} != "$new" ]]; then
                     nix-diff --color always "$current_drv" "$(nix-store --query --deriver "$new")" | less
                 else
                     >&2 echo "Derivation not available, falling back to nvd..."
-                    nvd diff "$current" "$new"
                 fi
+                # Show it "finally", since it's short and interesting.
+                nvd diff "$current" "$new"
             fi
         fi
         >&2 echo
