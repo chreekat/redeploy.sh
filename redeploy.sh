@@ -63,8 +63,6 @@ rebuild build "$@"
 
 new="$(readlink result)"
 current="$(ssh "${target["$system"]}" readlink /run/current-system)"
-# FIXME: This is broken somehow, don't use.
-#current_drv=$(ssh "${target["$system"]}" nix-store --query --deriver "$current")
 
 # If old == new, we've given permission to deploy the new system.
 if [[ ${old["$system"]} != "$new" ]]; then
@@ -91,7 +89,8 @@ if [[ ${old["$system"]} != "$new" ]]; then
         >&2 echo
         >&2 echo "*** Forcing a redeploy of a NEW configuration for $system."
         >&2 echo
-        # FIXME: Why do I have this check, anyway?
+        # Even with -f, require interactive confirmation to deploy a new config.
+        # This might be a mistake? If it gets annoying, remove it.
         if [ -t 0 ]; then
             read -n1 -rp "Continue with forced deploy? [y/N] " yn
             if [[ $yn = [yY] ]]; then
@@ -109,7 +108,18 @@ if [[ ${old["$system"]} != "$new" ]]; then
         if [ -t 0 ]; then
             read -n1 -rp "Show diff? [y/N] " yn
             if [[ $yn = [yY] ]]; then
-                nix-diff --color always "${old["$system"]}" "$new" | less
+                echo
+                if ! nix-store --check-validity "$current" 2>/dev/null; then
+                    >&2 echo "Fetching deployed system for diff..."
+                    nix-copy-closure --from "${target["$system"]}" "$current"
+                fi
+                current_drv=$(nix-store --query --deriver "$current")
+                if [[ -e $current_drv ]]; then
+                    nix-diff --color always "$current_drv" "$(nix-store --query --deriver "$new")" | less
+                else
+                    >&2 echo "Derivation not available, falling back to nvd..."
+                    nvd diff "$current" "$new"
+                fi
             fi
         fi
         >&2 echo
