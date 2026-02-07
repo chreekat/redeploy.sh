@@ -130,5 +130,5 @@ if [[ ${old["$system"]} != "$new" ]]; then
 elif [[ $new = "$current" ]]; then
     echo "*** No change to system. Not deploying."
 else
-    rebuild switch --fast --target-host "${target["$system"]}"
+    rebuild switch --no-reexec --target-host "${target["$system"]}"
 fi
