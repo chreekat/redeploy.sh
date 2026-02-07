@@ -13,6 +13,12 @@
       in {
         packages.default = pkgs.writeShellApplication {
           name = "redeploy.sh";
+          runtimeInputs = [
+            pkgs.nixos-rebuild
+            pkgs.nix-diff
+            pkgs.nvd
+            pkgs.openssh
+          ];
           text = builtins.readFile ./redeploy.sh;
         };
     });
