@@ -103,7 +103,7 @@ if [[ ${old["$system"]} != "$new" ]]; then
         fi
     else
         >&2 echo
-        >&2 echo "*** This is a NEW configuration. Edit redeploy_config.sh if you're satisfied with it."
+        >&2 echo "*** This is a NEW configuration."
 
         if [ -t 0 ]; then
             read -n1 -rp "Show diff? [y/N] " yn
@@ -124,7 +124,8 @@ if [[ ${old["$system"]} != "$new" ]]; then
             fi
         fi
         >&2 echo
-        >&2 echo "*** New result for $system: $(readlink result)"
+        >&2 echo "*** New result for $system: $(readlink result)."
+        >&2 echo "*** Edit redeploy_config.sh if you're satisfied with it, then rerun to deploy."
         exit 1
     fi
 elif [[ $new = "$current" ]]; then
