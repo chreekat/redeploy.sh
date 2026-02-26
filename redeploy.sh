@@ -124,7 +124,7 @@ if [[ ${old["$system"]} != "$new" ]]; then
             fi
         fi
         >&2 echo
-        >&2 echo "*** New result for $system: $(readlink result)."
+        >&2 echo "*** New result for $system: $(readlink result)"
         >&2 echo "*** Edit redeploy_config.sh if you're satisfied with it, then rerun to deploy."
         exit 1
     fi
